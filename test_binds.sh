@@ -1,24 +1,25 @@
 #!/bin/bash
 
 LDAP_URI="ldap://localhost:389"
-DOMAIN="wigitron.local"
+DOMAIN="WIGITRON"
 
 test_bind() {
-  local upn=$1
+  local user=$1
   local pass=$2
   
-  if ldapwhoami -H "$LDAP_URI" -x -D "$upn" -w "$pass" > /dev/null 2>&1; then
-    echo "✅ [SUCCESS] Bind accepted for: $upn"
+  # Bind using the classic AD NetBIOS format: DOMAIN\username
+  if ldapwhoami -H "$LDAP_URI" -x -D "${DOMAIN}\\${user}" -w "$pass" > /dev/null 2>&1; then
+    echo "✅ [SUCCESS] Bind accepted for: ${DOMAIN}\\${user}"
   else
-    echo "❌ [FAILED]  Bind rejected for: $upn"
+    echo "❌ [FAILED]  Bind rejected for: ${DOMAIN}\\${user}"
   fi
 }
 
 echo "Testing valid credentials..."
-for i in {1..5}; test_bind "testuser${i}@${DOMAIN}" "Password!${i}"; done
+for i in {1..5}; do test_bind "testuser${i}" "Password!${i}"; done
 
 echo -e "\nTesting invalid password behavior..."
-test_bind "testuser1@${DOMAIN}" "WrongPassword123!"
+test_bind "testuser1" "WrongPassword123!"
 
 echo -e "\nTesting non-existent user behavior..."
-test_bind "ghostuser@${DOMAIN}" "Password!1"
+test_bind "ghostuser" "Password!1"

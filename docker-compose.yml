@@ -2,6 +2,8 @@ services:
   samba-dc:
     build: .
     container_name: samba-dc
+    cap_add:
+      - SYS_ADMIN
     ports:
       - "389:389"
       - "636:636"
