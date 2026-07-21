@@ -44,6 +44,15 @@ To stand up a separate office domain for `intl.wigitron.com`, run the parallel c
 
 This stack uses `ldap://localhost:1389`, `ldaps://localhost:1636`, and provisions its data in separate Docker volumes so it stays isolated from the default environment.
 
+#### Query Groups from the International Domain
+
+To retrieve all groups from the `intl.wigitron.com` directory, run this `curl` command from your host. The LDAP URL encodes the base DN, the attributes to return (`cn` and `mail`), the search scope (`sub` for the full subtree), and the filter (`objectClass=group`):
+
+    curl -u "cn=Administrator,cn=Users,dc=intl,dc=wigitron,dc=com:Admin!Test1234" \
+      "ldap://localhost:1389/dc=intl,dc=wigitron,dc=com?cn,mail?sub?(objectClass=group)"
+
+*The output will list all six groups seeded by the companion scripts: `All_Engineering`, `Dev_Team`, `QA_Team`, `All_Company`, `Support_Team`, and `Marketing_Team`, along with their `mail` attributes where set.*
+
 ### Running Both Domains at the Same Time
 
 Docker Compose can merge multiple files in a single command. Pass both compose files with `-f` flags and both containers will build and start in parallel:
