@@ -14,8 +14,9 @@ test_bind() {
   else
     docker exec "${SAMBA_CONTAINER}" ldapwhoami -H "${DOCKER_INTERNAL_LDAP_URI}" -x -D "${user}@${UPN_DOMAIN}" -w "$pass" > /dev/null 2>&1
   fi
+  bind_status=$?
 
-  if [ $? -eq 0 ]; then
+  if [ "${bind_status}" -eq 0 ]; then
     echo "✅ [SUCCESS] Bind accepted for: ${user}@${UPN_DOMAIN}"
   else
     echo "❌ [FAILED]  Bind rejected for: ${user}@${UPN_DOMAIN}"
