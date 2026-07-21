@@ -5,11 +5,13 @@ This repository provides a fully functional, containerized Active Directory LDAP
 ## Included Files
 
 - `docker-compose.yml`: Defines the Samba container, port mappings, and persistent volumes.
+- `docker-compose.international.yml`: Defines a second Samba container for the `intl.wigitron.com` office domain on separate ports and volumes.
 - `Dockerfile`: Builds the Ubuntu-based image and installs necessary Samba and LDAP utilities.
 - `entrypoint.sh`: Provisions the `WIGITRON.COM` domain upon first boot and starts the Samba daemon.
 - `seed_directory.sh`: A helper script that executes inside the running container to create nested organizational groups (`All_Engineering`, `Dev_Team`, `QA_Team`) and populates them with 20 mock users.
 - `add_email_groups.sh`: An add-on script to create shared distribution lists (e.g., `all@wigitron.com`, `support@wigitron.com`) and map them to mock users.
 - `test_binds.sh`: A host-side script to verify that LDAP authentication (binds) is functioning correctly using `ldapwhoami`.
+- `seed_international_directory.sh`, `add_international_email_groups.sh`, `test_international_binds.sh`: Companion scripts for the `intl.wigitron.com` office domain.
 
 ## Prerequisites
 
@@ -32,6 +34,16 @@ Launch the environment in detached mode. The initial build will take a moment as
 
 *Note: Give the container about 10-15 seconds after starting for the Samba daemon to fully initialize.*
 
+### International Office Domain
+To stand up a separate office domain for `intl.wigitron.com`, run the parallel compose stack and its companion scripts:
+
+    docker compose -f docker-compose.international.yml up -d --build
+    ./seed_international_directory.sh
+    ./add_international_email_groups.sh
+    ./test_international_binds.sh
+
+This stack uses `ldap://localhost:1389`, `ldaps://localhost:1636`, and provisions its data in separate Docker volumes so it stays isolated from the default environment.
+
 ### 3. Inject the Test Data
 Once the container is healthy, run the seeding scripts from your host machine. 
 
@@ -47,6 +59,8 @@ Next, create the shared email distribution lists and map the existing users to t
 Run the bind testing script to confirm the directory is accepting credentials. This script will attempt 5 successful logins and 2 deliberate failures to ensure the directory is enforcing authentication properly.
     
     ./test_binds.sh
+
+If `ldapwhoami` is not installed on the host, the bind scripts will automatically execute the validation from inside the running Samba container.
 
 ### 5. Verify Email Group Routing
 If you are testing mail servers or applications that need to resolve distribution lists, you can verify the LDAP mapping by querying the directory for the members of a shared email address. 

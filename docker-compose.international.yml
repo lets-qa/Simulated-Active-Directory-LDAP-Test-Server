@@ -1,0 +1,20 @@
+services:
+  samba-dc-international:
+    build: .
+    container_name: samba-dc-international
+    cap_add:
+      - SYS_ADMIN
+    environment:
+      AD_NETBIOS_DOMAIN: WIGITRONINTL
+      AD_REALM: INTL.WIGITRON.COM
+      AD_ADMIN_PASSWORD: Admin!Test1234
+    ports:
+      - "1389:389"
+      - "1636:636"
+    volumes:
+      - samba-data-international:/var/lib/samba
+      - samba-config-international:/etc/samba
+
+volumes:
+  samba-data-international:
+  samba-config-international:
