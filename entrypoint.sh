@@ -4,7 +4,7 @@ if [ ! -f /var/lib/samba/private/sam.ldb ]; then
     echo "Provisioning new AD domain..."
     samba-tool domain provision \
         --domain=WIGITRON \
-        --realm=WIGITRON.LOCAL \
+        --realm=WIGITRON.com \
         --server-role=dc \
         --dns-backend=SAMBA_INTERNAL \
         --adminpass='Admin!Test1234' \
