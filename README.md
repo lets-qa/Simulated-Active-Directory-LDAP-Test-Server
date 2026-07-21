@@ -6,9 +6,9 @@ This repository provides a fully functional, containerized Active Directory LDAP
 
 - `docker-compose.yml`: Defines the Samba container, port mappings, and persistent volumes.
 - `Dockerfile`: Builds the Ubuntu-based image and installs necessary Samba and LDAP utilities.
-- `entrypoint.sh`: Provisions the `WIGITRON.LOCAL` domain upon first boot and starts the Samba daemon.
+- `entrypoint.sh`: Provisions the `WIGITRON.COM` domain upon first boot and starts the Samba daemon.
 - `seed_directory.sh`: A helper script that executes inside the running container to create nested organizational groups (`All_Engineering`, `Dev_Team`, `QA_Team`) and populates them with 20 mock users.
-- `add_email_groups.sh`: An add-on script to create shared distribution lists (e.g., `all@wigitron.local`, `support@wigitron.local`) and map them to mock users.
+- `add_email_groups.sh`: An add-on script to create shared distribution lists (e.g., `all@wigitron.com`, `support@wigitron.com`) and map them to mock users.
 - `test_binds.sh`: A host-side script to verify that LDAP authentication (binds) is functioning correctly using `ldapwhoami`.
 
 ## Prerequisites
@@ -54,10 +54,10 @@ If you are testing mail servers or applications that need to resolve distributio
 Run this command to ask the directory for everyone assigned to the support email:
 
     ldapsearch -H ldap://localhost:389 \
-      -D "cn=Administrator,cn=Users,dc=wigitron,dc=local" \
+      -D "cn=Administrator,cn=Users,dc=wigitron,dc=com" \
       -w 'Admin!Test1234' \
-      -b "dc=wigitron,dc=local" \
-      "(mail=support@wigitron.local)" \
+      -b "dc=wigitron,dc=com" \
+      "(mail=support@wigitron.com)" \
       member
 
 *The output should cleanly list the distinguished names (DN) of test users 1 through 5.*
@@ -80,8 +80,8 @@ Legacy applications can connect to this environment using the following paramete
 
 - **LDAP URI:** `ldap://localhost:389` (or the Docker host's IP)
 - **LDAPS URI:** `ldaps://localhost:636` *(Self-signed certificate)*
-- **Domain:** `WIGITRON.LOCAL`
-- **Base DN:** `dc=wigitron,dc=local`
-- **Bind Credentials (UPN):** `testuser1@wigitron.local`
-- **Bind Credentials (DN):** `cn=Administrator,cn=Users,dc=wigitron,dc=local`
+- **Domain:** `wigitron.com`
+- **Base DN:** `dc=wigitron,dc=com`
+- **Bind Credentials (UPN):** `testuser1@wigitron.com`
+- **Bind Credentials (DN):** `cn=Administrator,cn=Users,dc=wigitron,dc=com`
 - **Administrator Password:** `Admin!Test1234`
