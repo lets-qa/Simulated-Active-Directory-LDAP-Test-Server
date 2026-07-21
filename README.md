@@ -4,9 +4,9 @@ This repository includes a standalone international test domain alongside the ex
 
 ## International domain artifacts
 
-- `/home/runner/work/Simulated-Active-Directory-LDAP-Test-Server/Simulated-Active-Directory-LDAP-Test-Server/config/international.wigitron.com/setup.json` defines the separate `international.wigitron.com` domain, office sites, controllers, groups, users, and service accounts.
-- `/home/runner/work/Simulated-Active-Directory-LDAP-Test-Server/Simulated-Active-Directory-LDAP-Test-Server/seed/international.wigitron.com/base.ldif` contains seed data for the new domain.
-- `/home/runner/work/Simulated-Active-Directory-LDAP-Test-Server/Simulated-Active-Directory-LDAP-Test-Server/tests/test_international_domain.py` validates that the setup and LDIF seed stay aligned.
+- `config/international.wigitron.com/setup.json` defines the separate `international.wigitron.com` domain, office sites, controllers, groups, users, and service accounts.
+- `seed/international.wigitron.com/base.ldif` contains seed data for the new domain.
+- `tests/test_international_domain.py` validates that the setup and LDIF seed stay aligned.
 
 ## Validation
 
