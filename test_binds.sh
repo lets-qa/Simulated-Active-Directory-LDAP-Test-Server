@@ -1,7 +1,7 @@
 #!/bin/bash
 
 LDAP_URI="${LDAP_URI:-ldap://localhost:389}"
-CONTAINER_LDAP_URI="${CONTAINER_LDAP_URI:-ldap://127.0.0.1:389}"
+DOCKER_INTERNAL_LDAP_URI="${DOCKER_INTERNAL_LDAP_URI:-ldap://127.0.0.1:389}"
 SAMBA_CONTAINER="${SAMBA_CONTAINER:-samba-dc}"
 UPN_DOMAIN="${UPN_DOMAIN:-wigitron.com}"
 
@@ -12,7 +12,7 @@ test_bind() {
   if command -v ldapwhoami > /dev/null 2>&1; then
     ldapwhoami -H "$LDAP_URI" -x -D "${user}@${UPN_DOMAIN}" -w "$pass" > /dev/null 2>&1
   else
-    docker exec "${SAMBA_CONTAINER}" ldapwhoami -H "${CONTAINER_LDAP_URI}" -x -D "${user}@${UPN_DOMAIN}" -w "$pass" > /dev/null 2>&1
+    docker exec "${SAMBA_CONTAINER}" ldapwhoami -H "${DOCKER_INTERNAL_LDAP_URI}" -x -D "${user}@${UPN_DOMAIN}" -w "$pass" > /dev/null 2>&1
   fi
 
   if [ $? -eq 0 ]; then
