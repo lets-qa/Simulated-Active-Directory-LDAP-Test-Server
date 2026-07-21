@@ -15,7 +15,7 @@ for i in {1..20}; do
   PASSWORD="Password!${i}"
   
   docker exec samba-dc samba-tool user add ${USERNAME} ${PASSWORD} \
-    --given-name="Test" --surname="User${i}" --mail-address="${USERNAME}@wigitron.local"
+    --given-name="Test" --surname="User${i}" --mail-address="${USERNAME}@wigitron.com"
     
   if [ $i -le 10 ]; then
     docker exec samba-dc samba-tool group addmembers "Dev_Team" "${USERNAME}"
