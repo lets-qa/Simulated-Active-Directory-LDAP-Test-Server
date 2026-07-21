@@ -44,6 +44,34 @@ To stand up a separate office domain for `intl.wigitron.com`, run the parallel c
 
 This stack uses `ldap://localhost:1389`, `ldaps://localhost:1636`, and provisions its data in separate Docker volumes so it stays isolated from the default environment.
 
+### Running Both Domains at the Same Time
+
+Docker Compose can merge multiple files in a single command. Pass both compose files with `-f` flags and both containers will build and start in parallel:
+
+    docker compose -f docker-compose.yml -f docker-compose.international.yml up -d --build
+
+Once both containers are running, seed and verify each domain independently:
+
+    # Default domain (wigitron.com)
+    ./seed_directory.sh
+    ./add_email_groups.sh
+    ./test_binds.sh
+
+    # International office domain (intl.wigitron.com)
+    ./seed_international_directory.sh
+    ./add_international_email_groups.sh
+    ./test_international_binds.sh
+
+To stop both domains at once, pass both files again:
+
+    docker compose -f docker-compose.yml -f docker-compose.international.yml down
+
+To wipe both environments completely (destroying all test data and volumes):
+
+    docker compose -f docker-compose.yml -f docker-compose.international.yml down -v
+
+> **Future option:** A single `docker-compose.all.yml` that defines both services and all four volumes in one file could replace the two-file `-f` approach above. This would allow a plain `docker compose -f docker-compose.all.yml up -d --build` with no flags needed. This is not yet implemented but is a straightforward next step if the number of domains grows.
+
 ### 3. Inject the Test Data
 Once the container is healthy, run the seeding scripts from your host machine. 
 
@@ -99,3 +127,96 @@ Legacy applications can connect to this environment using the following paramete
 - **Bind Credentials (UPN):** `testuser1@wigitron.com`
 - **Bind Credentials (DN):** `cn=Administrator,cn=Users,dc=wigitron,dc=com`
 - **Administrator Password:** `Admin!Test1234`
+
+---
+
+## Adding a New Domain
+
+The scripts in this repository are fully parameterized, so adding a new office domain is a repeatable, four-step process.
+
+### Step 1 — Create a compose file for the new domain
+
+Copy `docker-compose.international.yml` to a new file, e.g. `docker-compose.apac.yml`, and update the three values that must be unique per domain:
+
+| Field | Must be unique | Example value |
+|---|---|---|
+| `services` key | yes | `samba-dc-apac` |
+| `container_name` | yes | `samba-dc-apac` |
+| `AD_NETBIOS_DOMAIN` | yes (max 15 chars, uppercase) | `WIGITRONAPAC` |
+| `AD_REALM` | yes (FQDN, uppercase) | `APAC.WIGITRON.COM` |
+| `AD_ADMIN_PASSWORD` | recommended | `Admin!Apac1234` |
+| Host ports | yes (must not clash with existing stacks) | `"2389:389"` and `"2636:636"` |
+| Volume names | yes | `samba-data-apac` and `samba-config-apac` |
+
+### Step 2 — Create wrapper scripts for the new domain
+
+Create three thin wrapper scripts that set the container name, mail domain, and LDAP URI, then delegate to the shared scripts:
+
+**`seed_apac_directory.sh`**
+```bash
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SAMBA_CONTAINER="samba-dc-apac" \
+MAIL_DOMAIN="apac.wigitron.com" \
+"${SCRIPT_DIR}/seed_directory.sh"
+```
+
+**`add_apac_email_groups.sh`**
+```bash
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SAMBA_CONTAINER="samba-dc-apac" \
+MAIL_DOMAIN="apac.wigitron.com" \
+"${SCRIPT_DIR}/add_email_groups.sh"
+```
+
+**`test_apac_binds.sh`**
+```bash
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SAMBA_CONTAINER="samba-dc-apac" \
+LDAP_URI="ldap://localhost:2389" \
+DOCKER_INTERNAL_LDAP_URI="ldap://127.0.0.1:389" \
+UPN_DOMAIN="apac.wigitron.com" \
+"${SCRIPT_DIR}/test_binds.sh"
+```
+
+Make all three executable:
+
+    chmod +x seed_apac_directory.sh add_apac_email_groups.sh test_apac_binds.sh
+
+### Step 3 — Start the new domain
+
+Start only the new domain:
+
+    docker compose -f docker-compose.apac.yml up -d --build
+
+Or start all domains together by adding the new file to the `-f` chain:
+
+    docker compose -f docker-compose.yml \
+                   -f docker-compose.international.yml \
+                   -f docker-compose.apac.yml \
+                   up -d --build
+
+*Give each new container about 10-15 seconds to finish provisioning before running the seed scripts.*
+
+### Step 4 — Seed and verify
+
+    ./seed_apac_directory.sh
+    ./add_apac_email_groups.sh
+    ./test_apac_binds.sh
+
+### Environment variable reference
+
+The shared scripts read the following variables. All have sensible defaults so existing behaviour is unchanged when they are not set.
+
+| Variable | Default | Description |
+|---|---|---|
+| `SAMBA_CONTAINER` | `samba-dc` | Docker container name to exec commands against |
+| `MAIL_DOMAIN` | `wigitron.com` | Email domain suffix used when creating users and groups |
+| `LDAP_URI` | `ldap://localhost:389` | LDAP URI used by the host-side bind test |
+| `DOCKER_INTERNAL_LDAP_URI` | `ldap://127.0.0.1:389` | LDAP URI used when running the bind test inside the container |
+| `UPN_DOMAIN` | `wigitron.com` | UPN suffix (`user@domain`) used in bind tests |
+| `AD_NETBIOS_DOMAIN` | `WIGITRON` | NetBIOS/short domain name (max 15 chars) passed to `samba-tool domain provision` |
+| `AD_REALM` | `WIGITRON.com` | Full DNS realm passed to `samba-tool domain provision` |
+| `AD_ADMIN_PASSWORD` | `Admin!Test1234` | Administrator password set during domain provisioning |
