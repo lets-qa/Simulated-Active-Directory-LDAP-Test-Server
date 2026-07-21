@@ -1,0 +1,148 @@
+dn: DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: domain
+dc: international
+
+dn: OU=People,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: People
+
+dn: OU=Groups,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Groups
+
+dn: OU=Service Accounts,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Service Accounts
+
+dn: OU=Servers,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Servers
+
+dn: OU=Workstations,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Workstations
+
+dn: OU=Offices,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Offices
+
+dn: OU=London,OU=Offices,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: London
+
+dn: OU=Singapore,OU=Offices,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Singapore
+
+dn: OU=Toronto,OU=Offices,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: organizationalUnit
+ou: Toronto
+
+dn: CN=International Domain Admins,OU=Groups,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: group
+cn: International Domain Admins
+sAMAccountName: IntlDomainAdmins
+groupType: -2147483646
+member: CN=Ada Lovelace,OU=People,DC=international,DC=wigitron,DC=com
+
+dn: CN=London Office Users,OU=Groups,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: group
+cn: London Office Users
+sAMAccountName: LondonOfficeUsers
+groupType: -2147483646
+member: CN=Ada Lovelace,OU=People,DC=international,DC=wigitron,DC=com
+
+dn: CN=Singapore Office Users,OU=Groups,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: group
+cn: Singapore Office Users
+sAMAccountName: SingaporeOfficeUsers
+groupType: -2147483646
+member: CN=Grace Hopper,OU=People,DC=international,DC=wigitron,DC=com
+
+dn: CN=Toronto Office Users,OU=Groups,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: group
+cn: Toronto Office Users
+sAMAccountName: TorontoOfficeUsers
+groupType: -2147483646
+member: CN=Margaret Hamilton,OU=People,DC=international,DC=wigitron,DC=com
+
+dn: CN=Ada Lovelace,OU=People,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Ada Lovelace
+sn: Lovelace
+givenName: Ada
+displayName: Ada Lovelace
+sAMAccountName: adalovelace
+userPrincipalName: adalovelace@international.wigitron.com
+department: Operations
+physicalDeliveryOfficeName: London
+
+dn: CN=Grace Hopper,OU=People,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Grace Hopper
+sn: Hopper
+givenName: Grace
+displayName: Grace Hopper
+sAMAccountName: gracehopper
+userPrincipalName: gracehopper@international.wigitron.com
+department: Engineering
+physicalDeliveryOfficeName: Singapore
+
+dn: CN=Margaret Hamilton,OU=People,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: Margaret Hamilton
+sn: Hamilton
+givenName: Margaret
+displayName: Margaret Hamilton
+sAMAccountName: mhamilton
+userPrincipalName: mhamilton@international.wigitron.com
+department: Finance
+physicalDeliveryOfficeName: Toronto
+
+dn: CN=svc-intl-ldap-bind,OU=Service Accounts,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: user
+cn: svc-intl-ldap-bind
+sn: svc-intl-ldap-bind
+givenName: svc-intl-ldap-bind
+displayName: svc-intl-ldap-bind
+sAMAccountName: svc-intl-ldap-bind
+userPrincipalName: svc-intl-ldap-bind@international.wigitron.com
+description: Read-only service account for international LDAP integration tests
+
+dn: CN=INTL-DC01,OU=Servers,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: computer
+cn: INTL-DC01
+dNSHostName: INTL-DC01.international.wigitron.com
+
+dn: CN=INTL-DC02,OU=Servers,DC=international,DC=wigitron,DC=com
+objectClass: top
+objectClass: computer
+cn: INTL-DC02
+dNSHostName: INTL-DC02.international.wigitron.com

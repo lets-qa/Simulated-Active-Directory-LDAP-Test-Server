@@ -1,2 +1,15 @@
 # Simulated-Active-Directory-LDAP-Test-Server
-The Longest name for a test repo for a Simulated Active Directory LDAP Test Server
+
+This repository includes a standalone international test domain alongside the existing `us.wigitron.com` environment.
+
+## International domain artifacts
+
+- `/home/runner/work/Simulated-Active-Directory-LDAP-Test-Server/Simulated-Active-Directory-LDAP-Test-Server/config/international.wigitron.com/setup.json` defines the separate `international.wigitron.com` domain, office sites, controllers, groups, users, and service accounts.
+- `/home/runner/work/Simulated-Active-Directory-LDAP-Test-Server/Simulated-Active-Directory-LDAP-Test-Server/seed/international.wigitron.com/base.ldif` contains seed data for the new domain.
+- `/home/runner/work/Simulated-Active-Directory-LDAP-Test-Server/Simulated-Active-Directory-LDAP-Test-Server/tests/test_international_domain.py` validates that the setup and LDIF seed stay aligned.
+
+## Validation
+
+Run:
+
+`python -m unittest discover -s tests -p 'test_*.py'`

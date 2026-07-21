@@ -1,0 +1,107 @@
+{
+  "domainName": "international.wigitron.com",
+  "netbiosName": "WIGITRONINTL",
+  "distinguishedName": "DC=international,DC=wigitron,DC=com",
+  "topology": {
+    "relationship": "separate-domain",
+    "isolatedFrom": "us.wigitron.com",
+    "forestMode": "Windows2019Forest",
+    "domainMode": "Windows2019Domain"
+  },
+  "domainControllers": [
+    {
+      "hostname": "INTL-DC01",
+      "site": "London",
+      "ipv4Address": "10.40.10.10"
+    },
+    {
+      "hostname": "INTL-DC02",
+      "site": "Singapore",
+      "ipv4Address": "10.40.20.10"
+    }
+  ],
+  "sites": [
+    {
+      "name": "London",
+      "subnet": "10.40.10.0/24",
+      "officeCode": "LDN"
+    },
+    {
+      "name": "Singapore",
+      "subnet": "10.40.20.0/24",
+      "officeCode": "SIN"
+    },
+    {
+      "name": "Toronto",
+      "subnet": "10.40.30.0/24",
+      "officeCode": "YYZ"
+    }
+  ],
+  "organizationalUnits": [
+    "People",
+    "Groups",
+    "Service Accounts",
+    "Servers",
+    "Workstations",
+    "Offices",
+    "Offices/London",
+    "Offices/Singapore",
+    "Offices/Toronto"
+  ],
+  "groups": [
+    {
+      "name": "International Domain Admins",
+      "scope": "Global",
+      "members": [
+        "CN=Ada Lovelace,OU=People,DC=international,DC=wigitron,DC=com"
+      ]
+    },
+    {
+      "name": "London Office Users",
+      "scope": "Global",
+      "members": [
+        "CN=Ada Lovelace,OU=People,DC=international,DC=wigitron,DC=com"
+      ]
+    },
+    {
+      "name": "Singapore Office Users",
+      "scope": "Global",
+      "members": [
+        "CN=Grace Hopper,OU=People,DC=international,DC=wigitron,DC=com"
+      ]
+    },
+    {
+      "name": "Toronto Office Users",
+      "scope": "Global",
+      "members": [
+        "CN=Margaret Hamilton,OU=People,DC=international,DC=wigitron,DC=com"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "cn": "Ada Lovelace",
+      "samAccountName": "adalovelace",
+      "office": "London",
+      "department": "Operations"
+    },
+    {
+      "cn": "Grace Hopper",
+      "samAccountName": "gracehopper",
+      "office": "Singapore",
+      "department": "Engineering"
+    },
+    {
+      "cn": "Margaret Hamilton",
+      "samAccountName": "mhamilton",
+      "office": "Toronto",
+      "department": "Finance"
+    }
+  ],
+  "serviceAccounts": [
+    {
+      "cn": "svc-intl-ldap-bind",
+      "description": "Read-only service account for international LDAP integration tests"
+    }
+  ]
+}
