@@ -137,6 +137,20 @@ Legacy applications can connect to this environment using the following paramete
 - **Bind Credentials (DN):** `cn=Administrator,cn=Users,dc=wigitron,dc=com`
 - **Administrator Password:** `Admin!Test1234`
 
+### Test User Credentials
+
+All 20 test users follow the same naming and password pattern:
+
+| Username | Password |
+|---|---|
+| `testuser1` | `Password!1` |
+| `testuser2` | `Password!2` |
+| `testuser3` | `Password!3` |
+| ... | ... |
+| `testuser20` | `Password!20` |
+
+Users 1–10 belong to `Dev_Team`, and users 11–20 belong to `QA_Team`. Both child groups are nested inside `All_Engineering`. The same credentials apply to both the default (`wigitron.com`) and international (`intl.wigitron.com`) domains.
+
 ---
 
 ## Adding a New Domain
