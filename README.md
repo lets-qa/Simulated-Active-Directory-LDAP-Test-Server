@@ -5,11 +5,13 @@ This repository provides a fully functional, containerized Active Directory LDAP
 ## Included Files
 
 - `docker-compose.yml`: Defines the Samba container, port mappings, and persistent volumes.
+- `docker-compose.international.yml`: Defines a second Samba container for the `intl.wigitron.com` office domain on separate ports and volumes.
 - `Dockerfile`: Builds the Ubuntu-based image and installs necessary Samba and LDAP utilities.
 - `entrypoint.sh`: Provisions the `WIGITRON.COM` domain upon first boot and starts the Samba daemon.
 - `seed_directory.sh`: A helper script that executes inside the running container to create nested organizational groups (`All_Engineering`, `Dev_Team`, `QA_Team`) and populates them with 20 mock users.
 - `add_email_groups.sh`: An add-on script to create shared distribution lists (e.g., `all@wigitron.com`, `support@wigitron.com`) and map them to mock users.
 - `test_binds.sh`: A host-side script to verify that LDAP authentication (binds) is functioning correctly using `ldapwhoami`.
+- `seed_international_directory.sh`, `add_international_email_groups.sh`, `test_international_binds.sh`: Companion scripts for the `intl.wigitron.com` office domain.
 
 ## Prerequisites
 
@@ -32,6 +34,53 @@ Launch the environment in detached mode. The initial build will take a moment as
 
 *Note: Give the container about 10-15 seconds after starting for the Samba daemon to fully initialize.*
 
+### International Office Domain
+To stand up a separate office domain for `intl.wigitron.com`, run the parallel compose stack and its companion scripts:
+
+    docker compose -f docker-compose.international.yml up -d --build
+    ./seed_international_directory.sh
+    ./add_international_email_groups.sh
+    ./test_international_binds.sh
+
+This stack uses `ldap://localhost:1389`, `ldaps://localhost:1636`, and provisions its data in separate Docker volumes so it stays isolated from the default environment.
+
+#### Query Groups from the International Domain
+
+To retrieve all groups from the `intl.wigitron.com` directory, run this `curl` command from your host. The LDAP URL encodes the base DN, the attributes to return (`cn` and `mail`), the search scope (`sub` for the full subtree), and the filter (`objectClass=group`):
+
+    curl -u "cn=Administrator,cn=Users,dc=intl,dc=wigitron,dc=com:Admin!Test1234" \
+      "ldap://localhost:1389/dc=intl,dc=wigitron,dc=com?cn,mail?sub?(objectClass=group)"
+
+*The output will list all six groups seeded by the companion scripts: `All_Engineering`, `Dev_Team`, `QA_Team`, `All_Company`, `Support_Team`, and `Marketing_Team`, along with their `mail` attributes where set.*
+
+### Running Both Domains at the Same Time
+
+Docker Compose can merge multiple files in a single command. Pass both compose files with `-f` flags and both containers will build and start in parallel:
+
+    docker compose -f docker-compose.yml -f docker-compose.international.yml up -d --build
+
+Once both containers are running, seed and verify each domain independently:
+
+    # Default domain (wigitron.com)
+    ./seed_directory.sh
+    ./add_email_groups.sh
+    ./test_binds.sh
+
+    # International office domain (intl.wigitron.com)
+    ./seed_international_directory.sh
+    ./add_international_email_groups.sh
+    ./test_international_binds.sh
+
+To stop both domains at once, pass both files again:
+
+    docker compose -f docker-compose.yml -f docker-compose.international.yml down
+
+To wipe both environments completely (destroying all test data and volumes):
+
+    docker compose -f docker-compose.yml -f docker-compose.international.yml down -v
+
+> **Future option:** A single `docker-compose.all.yml` that defines both services and all four volumes in one file could replace the two-file `-f` approach above. This would allow a plain `docker compose -f docker-compose.all.yml up -d --build` with no flags needed. This is not yet implemented but is a straightforward next step if the number of domains grows.
+
 ### 3. Inject the Test Data
 Once the container is healthy, run the seeding scripts from your host machine. 
 
@@ -47,6 +96,8 @@ Next, create the shared email distribution lists and map the existing users to t
 Run the bind testing script to confirm the directory is accepting credentials. This script will attempt 5 successful logins and 2 deliberate failures to ensure the directory is enforcing authentication properly.
     
     ./test_binds.sh
+
+If `ldapwhoami` is not installed on the host, the bind scripts will automatically execute the validation from inside the running Samba container.
 
 ### 5. Verify Email Group Routing
 If you are testing mail servers or applications that need to resolve distribution lists, you can verify the LDAP mapping by querying the directory for the members of a shared email address. 
@@ -85,3 +136,110 @@ Legacy applications can connect to this environment using the following paramete
 - **Bind Credentials (UPN):** `testuser1@wigitron.com`
 - **Bind Credentials (DN):** `cn=Administrator,cn=Users,dc=wigitron,dc=com`
 - **Administrator Password:** `Admin!Test1234`
+
+### Test User Credentials
+
+All 20 test users follow the same naming and password pattern:
+
+| Username | Password |
+|---|---|
+| `testuser1` | `Password!1` |
+| `testuser2` | `Password!2` |
+| `testuser3` | `Password!3` |
+| ... | ... |
+| `testuser20` | `Password!20` |
+
+Users 1–10 belong to `Dev_Team`, and users 11–20 belong to `QA_Team`. Both child groups are nested inside `All_Engineering`. The same credentials apply to both the default (`wigitron.com`) and international (`intl.wigitron.com`) domains.
+
+---
+
+## Adding a New Domain
+
+The scripts in this repository are fully parameterized, so adding a new office domain is a repeatable, four-step process.
+
+### Step 1 — Create a compose file for the new domain
+
+Copy `docker-compose.international.yml` to a new file, e.g. `docker-compose.apac.yml`, and update the three values that must be unique per domain:
+
+| Field | Must be unique | Example value |
+|---|---|---|
+| `services` key | yes | `samba-dc-apac` |
+| `container_name` | yes | `samba-dc-apac` |
+| `AD_NETBIOS_DOMAIN` | yes (max 15 chars, uppercase) | `WIGITRONAPAC` |
+| `AD_REALM` | yes (FQDN, uppercase) | `APAC.WIGITRON.COM` |
+| `AD_ADMIN_PASSWORD` | recommended | `Admin!Apac1234` |
+| Host ports | yes (must not clash with existing stacks) | `"2389:389"` and `"2636:636"` |
+| Volume names | yes | `samba-data-apac` and `samba-config-apac` |
+
+### Step 2 — Create wrapper scripts for the new domain
+
+Create three thin wrapper scripts that set the container name, mail domain, and LDAP URI, then delegate to the shared scripts:
+
+**`seed_apac_directory.sh`**
+```bash
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SAMBA_CONTAINER="samba-dc-apac" \
+MAIL_DOMAIN="apac.wigitron.com" \
+"${SCRIPT_DIR}/seed_directory.sh"
+```
+
+**`add_apac_email_groups.sh`**
+```bash
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SAMBA_CONTAINER="samba-dc-apac" \
+MAIL_DOMAIN="apac.wigitron.com" \
+"${SCRIPT_DIR}/add_email_groups.sh"
+```
+
+**`test_apac_binds.sh`**
+```bash
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SAMBA_CONTAINER="samba-dc-apac" \
+LDAP_URI="ldap://localhost:2389" \
+DOCKER_INTERNAL_LDAP_URI="ldap://127.0.0.1:389" \
+UPN_DOMAIN="apac.wigitron.com" \
+"${SCRIPT_DIR}/test_binds.sh"
+```
+
+Make all three executable:
+
+    chmod +x seed_apac_directory.sh add_apac_email_groups.sh test_apac_binds.sh
+
+### Step 3 — Start the new domain
+
+Start only the new domain:
+
+    docker compose -f docker-compose.apac.yml up -d --build
+
+Or start all domains together by adding the new file to the `-f` chain:
+
+    docker compose -f docker-compose.yml \
+                   -f docker-compose.international.yml \
+                   -f docker-compose.apac.yml \
+                   up -d --build
+
+*Give each new container about 10-15 seconds to finish provisioning before running the seed scripts.*
+
+### Step 4 — Seed and verify
+
+    ./seed_apac_directory.sh
+    ./add_apac_email_groups.sh
+    ./test_apac_binds.sh
+
+### Environment variable reference
+
+The shared scripts read the following variables. All have sensible defaults so existing behaviour is unchanged when they are not set.
+
+| Variable | Default | Description |
+|---|---|---|
+| `SAMBA_CONTAINER` | `samba-dc` | Docker container name to exec commands against |
+| `MAIL_DOMAIN` | `wigitron.com` | Email domain suffix used when creating users and groups |
+| `LDAP_URI` | `ldap://localhost:389` | LDAP URI used by the host-side bind test |
+| `DOCKER_INTERNAL_LDAP_URI` | `ldap://127.0.0.1:389` | LDAP URI used when running the bind test inside the container |
+| `UPN_DOMAIN` | `wigitron.com` | UPN suffix (`user@domain`) used in bind tests |
+| `AD_NETBIOS_DOMAIN` | `WIGITRON` | NetBIOS/short domain name (max 15 chars) passed to `samba-tool domain provision` |
+| `AD_REALM` | `WIGITRON.com` | Full DNS realm passed to `samba-tool domain provision` |
+| `AD_ADMIN_PASSWORD` | `Admin!Test1234` | Administrator password set during domain provisioning |
